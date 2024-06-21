@@ -15,12 +15,77 @@ class SpecialTimeMachine extends SpecialPage {
 		if ( $request->wasPosted() ) {
 			$date = $request->getVal( 'date' );
 			$response = $request->response();
+			$request->setVal( 'timemachine-date-set', $date );
 			$response->setCookie( 'timemachine-date', $date );
+
+			$redirect = $request->getVal( 'redirect' );
+			if ( $redirect !== null ) {
+				$this->getOutput()->redirect( $redirect );
+				return;
+			}
 		}
+
+		$rawPresets = $this->getSkin()->msg( 'TimeMachinePresets' )->inContentLanguage();
+		$presetsError = false;
+		$presets = [];
+		if ( $rawPresets->exists() ) {
+			$lines = explode( "\n", $rawPresets->plain() );
+			foreach ( $lines as $line ) {
+				if ( strlen( trim( $line ) ) === 0 ) {
+					continue;
+				}
+
+				$pipeIndex = strrpos( $line, '|' );
+				if ( $pipeIndex === -1 ) {
+					$presetsError = true;
+					continue;
+				}
+
+				$label = substr( $line, 0, $pipeIndex );
+				$value = substr ( $line, $pipeIndex + 1 );
+				$presets[] = [
+					'label' => $label,
+					'data' => $value
+				];
+			}
+		}
+
 		$output = $this->getOutput();
 		$output->enableOOUI();
+
+		if ( $presetsError ) {
+			$output->addHTML(
+				Html::rawElement(
+					'p',
+					['class' => 'errorbox'],
+					Parser::stripOuterParagraph($output->parseAsContent(
+						'The [[WikiMedia:TimeMachinePresets|presets page]] is invalid and could not be fully parsed.'
+					))
+				)
+			);
+		}
+
+		if (count($presets) > 0) {
+			$output->addElement( 'p', [], wfMessage( 'timemachine-presets-p1' )->escaped() );
+			$dropdown = new DropdownInputWidget( [
+				'infusable' => true,
+				'id' => 'preset-dropdown',
+				'name' => 'date',
+				'options' => $presets
+			] );
+			$button = new ButtonInputWidget( [
+				'type' => 'submit',
+				'label' => wfMessage( 'timemachine-button1' )->escaped(),
+				'flags' => ['primary', 'progressive']
+			] );
+			$layout = new ActionFieldLayout( $dropdown, $button );
+			$output->addInlineStyle( '.oo-ui-fieldLayout-align-left { max-width: 50em; }' );
+			$output->addHTML( new FormLayout( ['method' => 'POST', 'items' => [$layout]] ) );
+			$output->addModules( 'ext.timeMachine' );
+		}
+
 		$output->addHTML( '
-			<p>' . wfMessage( 'timemachine-p1' )->escaped() . '</p>
+			<p>' . wfMessage( count($presets) > 0 ? 'timemachine-p1-presets' : 'timemachine-p1' )->escaped() . '</p>
 			<form method="post">
 			<input type="date" name="date" value="' . $date . '" />
 			<button type="submit" class="mw-ui-button mw-ui-progressive">' . wfMessage( 'timemachine-button1' )->escaped() . '</button>
@@ -53,6 +118,11 @@ class SpecialTimeMachine extends SpecialPage {
 		}
 
 		$date = $request->getCookie( 'timemachine-date' );
+		if ( $date !== null ) {
+			$output->addModuleStyles([
+				'mediawiki.ui.button',
+			]);
+		}
 		if ( !$date || $request->getBool( 'oldid' ) ) {
 			return;
 		}
