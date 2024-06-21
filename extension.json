@@ -20,11 +20,11 @@
 	"ExtensionMessagesFiles": {
 		"TimeMachineAlias": "TimeMachine.alias.php"
 	},
-	"AutoloadNamespaces": {
-		"MediaWiki\\Extension\\TimeMachine\\": "includes/"
+	"AutoloadClasses": {
+		"SpecialTimeMachine": "SpecialTimeMachine.php"
 	},
 	"Hooks": {
-		"BeforeInitialize": "MediaWiki\\Extension\\TimeMachine\\Hooks::onBeforeInitialize"
+		"BeforeInitialize": "SpecialTimeMachine::onBeforeInitialize"
 	},
 	"manifest_version": 2
 }
