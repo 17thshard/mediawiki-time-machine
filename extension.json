@@ -24,7 +24,20 @@
 		"SpecialTimeMachine": "SpecialTimeMachine.php"
 	},
 	"Hooks": {
-		"BeforeInitialize": "SpecialTimeMachine::onBeforeInitialize"
+		"BeforeInitialize": "SpecialTimeMachine::onBeforeInitialize",
+		"SkinTemplateToolboxEnd": "SpecialTimeMachine::onToolboxEnd"
+	},
+	"ResourceModules": {
+		"ext.timeMachine": {
+			"localBasePath": ".",
+			"remoteExtPath": "TimeMachine",
+			"packageFiles": [
+				"form.js"
+			],
+			"dependencies": [
+				"oojs-ui-core"
+			]
+		}
 	},
 	"manifest_version": 2
 }

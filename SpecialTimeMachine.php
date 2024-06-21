@@ -150,4 +150,40 @@ class SpecialTimeMachine extends SpecialPage {
 		$url = $rev->getTitle()->getLocalURL( [ 'oldid' => $rev_id ] );
 		$output->redirect( $url );
 	}
+
+	public static function onToolboxEnd( BaseTemplate $template ) {
+		$request = $template->getSkin()->getRequest();
+		$date = $request->getVal( 'timemachine-date-set', $request->getCookie( 'timemachine-date' ) );
+		if (!$date) {
+			return;
+		}
+
+		$redirectUrl = $request->getRequestURL();
+		if ( $request->getVal( 'action', 'view' ) === 'view' && $request->getVal( 'type' ) !== 'revision' ) {
+			$redirectUrl = $template->getSkin()->getTitle()->getLocalURL();
+		}
+
+		$html = 'You are currently in the past.';
+		$html .= Html::element(
+			'input',
+			[ 'type' => 'hidden', 'name' => 'redirect', 'value' => $redirectUrl ]
+		);
+		$html .= Html::element(
+			'button',
+			[ 'type' => 'submit', 'class' => 'mw-ui-button' ],
+			'Back to the present'
+		);
+		$timeMachineTitle = Title::makeTitle( NS_SPECIAL, 'TimeMachine' );
+		$html = Html::rawElement(
+			'form',
+			[
+				'action' => $timeMachineTitle->getLocalURL(),
+				'method' => 'POST'
+			],
+			$html
+		);
+		$html = Html::rawElement( 'li', [], $html );
+
+		echo $html;
+	}
 }
