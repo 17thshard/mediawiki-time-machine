@@ -1,5 +1,10 @@
 <?php
 
+use OOUI\ActionFieldLayout;
+use OOUI\ButtonInputWidget;
+use OOUI\DropdownInputWidget;
+use OOUI\FormLayout;
+
 class SpecialTimeMachine extends SpecialPage {
 
 	public function __construct() {
