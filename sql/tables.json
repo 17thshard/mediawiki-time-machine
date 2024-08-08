@@ -1,0 +1,48 @@
+[
+	{
+		"name": "timemachine_title_history",
+		"columns": [
+			{
+				"name": "tm_page_id",
+				"comment": "ID of the page that held the title",
+				"type": "integer",
+				"options": { "notnull": true, "unsigned": true }
+			},
+			{
+				"name": "tm_old_namespace",
+				"comment": "Namespace the page had before the timestamp",
+				"type": "integer",
+				"options": { "notnull": true }
+			},
+			{
+				"name": "tm_old_title",
+				"comment": "Title the page had before the timestamp",
+				"type": "binary",
+				"options": { "notnull": true, "length": 255 }
+			},
+			{
+				"name": "tm_new_namespace",
+				"comment": "Namespace the page had before the timestamp",
+				"type": "integer",
+				"options": { "notnull": true }
+			},
+			{
+				"name": "tm_new_title",
+				"comment": "Title the page had after the timestamp",
+				"type": "binary",
+				"options": { "notnull": true, "length": 255 }
+			},
+			{
+				"name": "tm_timestamp",
+				"comment": "Timestamp of when title was last valid",
+				"type": "mwtimestamp",
+				"options": { "notnull": true }
+			}
+		],
+		"indexes": [
+			{ "name": "tm_old_title_lookup", "columns": [ "tm_old_namespace", "tm_old_title", "tm_timestamp" ], "unique": false },
+			{ "name": "tm_new_title_lookup", "columns": [ "tm_new_namespace", "tm_new_title", "tm_timestamp" ], "unique": false }
+		],
+		"pk": [ "tm_page_id", "tm_timestamp" ]
+	}
+]

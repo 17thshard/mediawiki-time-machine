@@ -10,7 +10,7 @@
 		"MediaWiki": ">= 1.29.0"
 	},
 	"SpecialPages": {
-		"TimeMachine": "SpecialTimeMachine"
+		"TimeMachine": "MediaWiki\\Extension\\TimeMachine\\SpecialTimeMachine"
 	},
 	"MessagesDirs": {
 		"TimeMachine": [
@@ -20,12 +20,27 @@
 	"ExtensionMessagesFiles": {
 		"TimeMachineAlias": "TimeMachine.alias.php"
 	},
-	"AutoloadClasses": {
-		"SpecialTimeMachine": "SpecialTimeMachine.php"
+	"AutoloadNamespaces": {
+		"MediaWiki\\Extension\\TimeMachine\\": "src/"
+	},
+	"HookHandlers": {
+		"timeMachine": {
+			"class": "MediaWiki\\Extension\\TimeMachine\\TimeMachineHooks"
+		},
+		"timeMachineDbUpdates": {
+			"class": "MediaWiki\\Extension\\TimeMachine\\TimeMachineDbUpdates"
+		}
 	},
 	"Hooks": {
-		"BeforeInitialize": "SpecialTimeMachine::onBeforeInitialize",
-		"SkinTemplateToolboxEnd": "SpecialTimeMachine::onToolboxEnd"
+		"BeforeInitialize": [ "timeMachine" ],
+		"InitializeArticleMaybeRedirect": [ "timeMachine" ],
+		"ArticleFromTitle": [ "timeMachine" ],
+		"BeforeParserFetchTemplateAndtitle": [ "timeMachine" ],
+		"PageMoveComplete": [ "timeMachine" ],
+		"ParserOptionsRegister": [ "timeMachine" ],
+		"SpecialSearchResultsPrepend": [ "timeMachine" ],
+		"SpecialSearchResults": [ "timeMachine" ],
+		"LoadExtensionSchemaUpdates": [ "timeMachineDbUpdates" ]
 	},
 	"ResourceModules": {
 		"ext.timeMachine": {

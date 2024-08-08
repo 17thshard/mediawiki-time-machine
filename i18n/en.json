@@ -12,5 +12,11 @@
 	"timemachine-button1": "Go to this date",
 	"timemachine-p2": "Note that only the content of the wiki will change. The style, sidebar, footer and other elements of the wiki will remain unchanged.",
 	"timemachine-p3": "To return to browsing the wiki normally, click the button below, or empty your cookies.",
-	"timemachine-button2": "Back to the present"
+	"timemachine-button2": "Back to the present",
+	"timemachine-article-info": "You are currently using the [[Special:TimeMachine|Time Machine]]. Your view of this article might not reflect the most recent state.",
+	"timemachine-search-info": "You are currently using the [[Special:TimeMachine|Time Machine]]. Search is not affected by your time traveling, which includes search result previews.",
+	"timemachine-missing": "You are using the [[Special:TimeMachine|Time Machine]]. There either is currently no text on this page or it does not exist yet at the time you've traveled to.",
+	"timemachine-success-traveling": "Successfully traveled to another time. You will now only be able to visit pages as they existed before your chosen date.",
+	"timemachine-success-reset": "Successfully returned to the present. You will now see the regular content for all pages again.",
+	"timemachine-info-traveling": "You are currently actively using the Time Machine and have traveled to another date that you can see below."
 }
