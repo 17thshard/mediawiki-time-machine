@@ -220,10 +220,6 @@ class Hooks implements ParserOptionsRegisterHook, ArticleFromTitleHook, BeforePa
             return;
         }
 
-        if ( $titleSnippet ) {
-            return;
-        }
-
         // Replace title if page had a different name at the time travel destination
         $oldTitle = Utils::findTitleAt( $title, $timeTravelTarget );
         if ( $oldTitle ) {
