@@ -25,21 +25,35 @@
 	},
 	"HookHandlers": {
 		"timeMachine": {
-			"class": "MediaWiki\\Extension\\TimeMachine\\TimeMachineHooks"
+			"class": "MediaWiki\\Extension\\TimeMachine\\Hooks"
 		},
 		"timeMachineDbUpdates": {
-			"class": "MediaWiki\\Extension\\TimeMachine\\TimeMachineDbUpdates"
+			"class": "MediaWiki\\Extension\\TimeMachine\\DbUpdates"
 		}
 	},
 	"Hooks": {
 		"BeforeInitialize": [ "timeMachine" ],
 		"InitializeArticleMaybeRedirect": [ "timeMachine" ],
 		"ArticleFromTitle": [ "timeMachine" ],
-		"BeforeParserFetchTemplateAndtitle": [ "timeMachine" ],
-		"PageMoveComplete": [ "timeMachine" ],
+		"getUserPermissionsErrors": [ "timeMachine" ],
+
 		"ParserOptionsRegister": [ "timeMachine" ],
-		"SpecialSearchResultsPrepend": [ "timeMachine" ],
+		"BeforeParserFetchTemplateAndtitle": [ "timeMachine" ],
+
+		"PageMoveComplete": [ "timeMachine" ],
+
 		"SpecialSearchResults": [ "timeMachine" ],
+		"ApiOpenSearchSuggest": [ "timeMachine" ],
+		"SpecialSearchResultsPrepend": [ "timeMachine" ],
+		"ShowSearchHit": [ "timeMachine" ],
+		"ShowSearchHitTitle": [ "timeMachine" ],
+
+		"CategoryPageView": [ "timeMachine" ],
+
+		"RandomPageQuery": [ "timeMachine" ],
+		"AncientPagesQuery": [ "timeMachine" ],
+		"LonelyPagesQuery": [ "timeMachine" ],
+
 		"LoadExtensionSchemaUpdates": [ "timeMachineDbUpdates" ]
 	},
 	"ResourceModules": {
