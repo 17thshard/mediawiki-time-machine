@@ -178,12 +178,6 @@ class Hooks implements ParserOptionsRegisterHook, ArticleFromTitleHook, BeforePa
                 return $existed && !Utils::wasMovedHereAfter( $title, $timeTravelTarget );
             }
         );
-
-        wfDebug( '--- EDITING SUGGESTION RESULTS ---' );
-        foreach ( $results as $suggestion ) {
-            wfDebug( $suggestion['title']->getPrefixedText() );
-        }
-        wfDebug( '--- END EDITING SUGGESTION RESULTS ---' );
     }
 
     public function onSpecialSearchResultsPrepend( $searchPage, $output, $term ) {
