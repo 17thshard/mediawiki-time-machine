@@ -13,15 +13,25 @@ class Utils {
     public const TIMESTAMP_PARSER_OPTION = 'timeMachineTimestamp';
 
     public static function getTimeTravelTarget( WebRequest $request ) {
-        $date = $request->getCookie( Utils::COOKIE );
+        $date = $request->getVal( self::COOKIE, $request->getCookie( self::COOKIE ) );
         if ( !$date ) {
             return false;
         }
 
-        return wfTimestamp(
-            TS_UNIX,
-            $date . ' 00:00:00'
-        );
+        return wfTimestamp( TS_UNIX, $date . ' 00:00:00' );
+    }
+
+    public static function isTimeMachinePermanentlyActive( WebRequest $request ) {
+        $date = $request->getCookie( self::COOKIE );
+        if ( !$date ) {
+            return false;
+        }
+
+        return wfTimestamp( TS_UNIX, $date . ' 00:00:00' ) !== false;
+    }
+
+    public static function isTimeTravelingTemporarily( WebRequest $request ) {
+        return $request->getVal( self::COOKIE ) !== null && self::getTimeTravelTarget( $request ) !== false;
     }
 
     public static function timeTravelRevision( Title $title, string $timestamp ) {

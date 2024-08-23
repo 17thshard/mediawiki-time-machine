@@ -13,12 +13,14 @@
 	"timemachine-p2": "Note that only the content of the wiki will change. The style, sidebar, footer and other elements of the wiki will remain unchanged.",
 	"timemachine-p3": "To return to browsing the wiki normally, click the button below, or empty your cookies.",
 	"timemachine-button2": "Back to the present",
-	"timemachine-article-info": "You are currently using the [[Special:TimeMachine|Time Machine]]. Your view of this article might not reflect the most recent state.",
+	"timemachine-article-info": "You are currently using the [[Special:TimeMachine|Time Machine]] and see this article as it was on {{#dateformat:$1|mdy}}. Your view might not reflect the most recent state. [$2 Time-traveling link to this page]",
+	"timemachine-article-info-temporary": "You have used a [[Special:TimeMachine|time-traveling]] link to reach this page and see this article as it was on {{#dateformat:$1|mdy}}. Your view might not reflect the most recent state. Links away from this page will take you back to the present. If you want to time-travel permanently, use the [[Special:TimeMachine|Time Machine]].",
 	"timemachine-search-info": "You are currently using the [[Special:TimeMachine|Time Machine]]. Search results are based on the current state of pages, but articles that have not yet existed at the time you're traveling to are hidden. To avoid seeing newer page content, page previews are disabled.",
 	"timemachine-category-info": "You are currently using the [[Special:TimeMachine|Time Machine]]. This list will display all articles in a category using their most recent title, even if they did not exist yet or had a different title at the time you're traveling to.",
 	"timemachine-missing": "You are using the [[Special:TimeMachine|Time Machine]]. There either is currently no text on this page or it does not exist yet at the time you've traveled to.",
 	"timemachine-success-traveling": "Successfully traveled to another time. You will now only be able to visit pages as they existed before your chosen date.",
 	"timemachine-success-reset": "Successfully returned to the present. You will now see the regular content for all pages again.",
 	"timemachine-info-traveling": "You are currently actively using the Time Machine and have traveled to another date that you can see below.",
-	"timemachine-no-editing": "You are using the [[Special:TimeMachine|Time Machine]]. To edit this page, go back to the present."
+	"timemachine-no-editing": "You are using the [[Special:TimeMachine|Time Machine]]. To edit this page, go back to the present.",
+	"timemachine-link": "Time-traveling link"
 }
