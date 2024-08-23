@@ -21,7 +21,7 @@ class SpecialTimeMachine extends SpecialPage {
      */
     public function execute( $parser ) {
         $request = $this->getRequest();
-        $currentlyTimeTraveling = Utils::getTimeTravelTarget( $request ) !== false;
+        $currentlyTimeTraveling = Utils::isTimeMachinePermanentlyActive( $request );
         $date = $request->getCookie( Utils::COOKIE, null, date( 'Y-m-d' ) );
 
         $output = $this->getOutput();

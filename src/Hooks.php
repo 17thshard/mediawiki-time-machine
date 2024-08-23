@@ -11,6 +11,7 @@ use MediaWiki\Hook\LonelyPagesQueryHook;
 use MediaWiki\Hook\PageMoveCompleteHook;
 use MediaWiki\Hook\ParserOptionsRegisterHook;
 use MediaWiki\Hook\RandomPageQueryHook;
+use MediaWiki\Hook\SidebarBeforeOutputHook;
 use MediaWiki\Hook\SpecialSearchResultsHook;
 use MediaWiki\Hook\SpecialSearchResultsPrependHook;
 use MediaWiki\Page\Hook\ArticleFromTitleHook;
@@ -26,9 +27,9 @@ class Hooks implements ParserOptionsRegisterHook, ArticleFromTitleHook, BeforePa
                        BeforeInitializeHook, InitializeArticleMaybeRedirectHook, PageMoveCompleteHook,
                        SpecialSearchResultsPrependHook, SpecialSearchResultsHook, GetUserPermissionsErrorsHook,
                        RandomPageQueryHook, AncientPagesQueryHook, LonelyPagesQueryHook, CategoryPageViewHook,
-                       ShowSearchHitHook, ShowSearchHitTitleHook, ApiOpenSearchSuggestHook {
+                       ShowSearchHitHook, ShowSearchHitTitleHook, ApiOpenSearchSuggestHook, SidebarBeforeOutputHook {
     public function onBeforeInitialize( $title, $unused, $output, $user, $request, $mediaWiki ) {
-        global $wgTimeMachineServedByMove;
+        global $wgTimeMachineServedByMove, $wgTimeMachineOriginalTitle;
         $timeTravelTarget = Utils::getTimeTravelTarget( $request );
         if ( !$timeTravelTarget ) {
             return;
@@ -51,6 +52,7 @@ class Hooks implements ParserOptionsRegisterHook, ArticleFromTitleHook, BeforePa
         $newTitle->prefixedText = $title->getPrefixedText();
         RequestContext::getMain()->setTitle( $newTitle );
         $wgTimeMachineServedByMove = true;
+        $wgTimeMachineOriginalTitle = $title;
     }
 
     public function onGetUserPermissionsErrors( $title, $user, $action, &$result ) {
@@ -106,7 +108,35 @@ class Hooks implements ParserOptionsRegisterHook, ArticleFromTitleHook, BeforePa
             $timeTraveledRev = null;
         }
 
-        $article = new TimeMachineArticle( $title, $timeTraveledRev );
+        $article = new TimeMachineArticle( $title, date( 'Y-m-d', $timeTravelTarget ), $timeTraveledRev );
+    }
+
+    public function onSidebarBeforeOutput( $skin, &$sidebar ): void {
+        global $wgTimeMachineServedByMove, $wgTimeMachineOriginalTitle;
+        $timeTravelTarget = Utils::getTimeTravelTarget( $skin->getRequest() );
+        if ( !$timeTravelTarget ) {
+            return;
+        }
+
+        $toolbox = $sidebar['TOOLBOX'];
+        if ( !$toolbox ) {
+            return;
+        }
+        $permalinkIndex = array_search( 'permalink', array_keys( $toolbox ) );
+        if ( $permalinkIndex === false ) {
+            return;
+        }
+
+        $timeTravelTitle = $skin->getTitle();
+        if ( $wgTimeMachineServedByMove ) {
+            $timeTravelTitle = $wgTimeMachineOriginalTitle;
+        }
+        $sidebar['TOOLBOX'] = array_slice( $toolbox, 0, $permalinkIndex + 1, true ) + [
+                'timetravellink' => [
+                    'text' => $skin->msg( 'timemachine-link' )->text(),
+                    'href' => $timeTravelTitle->getLocalURL( 'timemachine-date=' . date( 'Y-m-d', $timeTravelTarget ) )
+                ]
+            ] + array_slice( $toolbox, $permalinkIndex + 1, null, true );
     }
 
     public function onParserOptionsRegister( &$defaults, &$inCacheKey, &$lazyLoad ) {
