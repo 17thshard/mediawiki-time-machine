@@ -4,9 +4,17 @@ namespace MediaWiki\Extension\TimeMachine;
 
 use Article;
 use ParserOptions;
+use Title;
 use Xml;
 
 class TimeMachineArticle extends Article {
+    private string $timeTravelDate;
+
+    public function __construct( Title $title, $timeTravelDate, $oldId = null ) {
+        parent::__construct( $title, $oldId );
+        $this->timeTravelDate = $timeTravelDate;
+    }
+
     public function getOldIDFromRequest(): ?int {
         return null;
     }
@@ -29,9 +37,22 @@ class TimeMachineArticle extends Article {
     }
 
     public function setOldSubtitle( $oldid = 0 ) {
+        global $wgTimeMachineServedByMove, $wgTimeMachineOriginalTitle;
+
         $dir = $this->getContext()->getLanguage()->getDir();
         $lang = $this->getContext()->getLanguage()->getHtmlCode();
-        $text = wfMessage( 'timemachine-article-info' )->parse();
+        $messageKey = 'timemachine-article-info';
+        if (Utils::isTimeTravelingTemporarily($this->getContext()->getRequest())) {
+            $messageKey = 'timemachine-article-info-temporary';
+        }
+
+        $linkTitle = $this->getTitle();
+        if ($wgTimeMachineServedByMove) {
+            $linkTitle = $wgTimeMachineOriginalTitle;
+        }
+        $link = $linkTitle->getFullURL( 'timemachine-date=' . $this->timeTravelDate );
+
+        $text = wfMessage( $messageKey, $this->timeTravelDate, $link )->parse();
         $content = Xml::openElement(
                 'div',
                 [

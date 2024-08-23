@@ -36,6 +36,7 @@
 		"InitializeArticleMaybeRedirect": [ "timeMachine" ],
 		"ArticleFromTitle": [ "timeMachine" ],
 		"getUserPermissionsErrors": [ "timeMachine" ],
+		"SidebarBeforeOutput": [ "timeMachine" ],
 
 		"ParserOptionsRegister": [ "timeMachine" ],
 		"BeforeParserFetchTemplateAndtitle": [ "timeMachine" ],
