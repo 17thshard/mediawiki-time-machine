@@ -14,12 +14,14 @@
 	"timemachine-p2": "Ten en cuenta que sólo cambiará el contenido de la wiki. El estilo, la barra lateral, el pie de página y otros elementos de la wiki permanecerán inalterados.",
 	"timemachine-p3": "Para volver a navegar por la wiki con normalidad, haz clic en el botón de abajo o elimina tus cookies.",
 	"timemachine-button2": "Volver al presente",
-	"timemachine-article-info": "Actualmente estás utilizando la [[Special:TimeMachine|máquina del tiempo]], puede que lo que veas en este artículo no refleje el estado más actual del mismo.",
+	"timemachine-article-info": "Actualmente estás utilizando la [[Especial:MáquinaDelTiempo|Máquina del Tiempo]] y ves este artículo tal y como era en {{#dateformat:$1|mdy}}. Es posible que no refleje el estado más reciente. [$2 Enlace de viaje en el tiempo a esta página]",
+	"timemachine-article-info-temporary": "Has utilizado un enlace que [[Especial:Máquina del Tiempo|viaja en el tiempo]] para llegar a esta página y ver este artículo tal y como era en {{#dateformat:$1|mdy}}. Es posible que no refleje el estado más reciente. Los enlaces que salgan de esta página te devolverán al presente. Si quieres viajar en el tiempo permanentemente, utiliza la [[Especial:Máquina del Tiempo|Máquina del Tiempo]].",
 	"timemachine-search-info": "Actualmente estás usando la [[Special:TimeMachine|máquina del tiempo]]. Los resultados de la búsqueda se basan en el estado actual de las páginas, pero se ocultarán los artículos que aún no existían en el momento al que estás viajando. Para no ver el contenido de las páginas más recientes, las vistas previas de las páginas están desactivadas.",
 	"timemachine-category-info": "Actualmente estás utilizando la [[Special:TimeMachine|máquina del tiempo]]. Esta lista mostrará todos los artículos de una categoría utilizando su título más reciente, incluso si aún no existían o tenían un título diferente en el momento al que has viajado.",
 	"timemachine-missing": "Estás usando la [[Special:TimeMachine|máquina del tiempo]]. Actualmente no hay texto en esta página o aún no existía en el momento al que has viajado.",
 	"timemachine-success-traveling": "Has viajado con éxito a otro momento. Ahora sólo podrás visitar las páginas tal y como existían antes de la fecha elegida.",
 	"timemachine-success-reset": "Has vuelto con éxito al presente. Ahora volverás a ver el contenido normal de todas las páginas.",
 	"timemachine-info-traveling": "Actualmente estás utilizando activamente la máquina del tiempo y has viajado a la fecha que puedes ver a continuación.",
-	"timemachine-no-editing": "Estás utilizando la [[Special:TimeMachine|máquina del tiempo]]. Para editar esta página, vuelve al presente."
+	"timemachine-no-editing": "Estás utilizando la [[Special:TimeMachine|máquina del tiempo]]. Para editar esta página, vuelve al presente.",
+	"timemachine-link": "Enlace para viajar en el tiempo"
 }
