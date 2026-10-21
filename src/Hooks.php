@@ -21,6 +21,7 @@ use MediaWiki\Search\Hook\ShowSearchHitHook;
 use MediaWiki\Search\Hook\ShowSearchHitTitleHook;
 use RequestContext;
 use Title;
+use Html;
 use Xml;
 
 class Hooks implements ParserOptionsRegisterHook, ArticleFromTitleHook, BeforeParserFetchTemplateAndtitleHook,
@@ -216,18 +217,8 @@ class Hooks implements ParserOptionsRegisterHook, ArticleFromTitleHook, BeforePa
             return;
         }
 
-        $dir = $searchPage->getContext()->getLanguage()->getDir();
-        $lang = $searchPage->getContext()->getLanguage()->getHtmlCode();
         $text = wfMessage( 'timemachine-search-info' )->parse();
-        $content = Xml::openElement(
-                'div',
-                [
-                    'class' => "noarticletext mw-content-$dir warningbox",
-                    'dir' => $dir,
-                    'lang' => $lang,
-                ]
-            ) . "\n$text\n</div>";
-        $output->addSubtitle( $content );
+        $output->addSubtitle( Html::warningBox( $text ) );
     }
 
     public function onShowSearchHitTitle(
@@ -283,18 +274,8 @@ class Hooks implements ParserOptionsRegisterHook, ArticleFromTitleHook, BeforePa
 
         // We can't easily filter what pages get displayed on a category page, but at least we can show a warning
 
-        $dir = $catpage->getContext()->getLanguage()->getDir();
-        $lang = $catpage->getContext()->getLanguage()->getHtmlCode();
         $text = wfMessage( 'timemachine-category-info' )->parse();
-        $content = Xml::openElement(
-                'div',
-                [
-                    'class' => "noarticletext mw-content-$dir warningbox",
-                    'dir' => $dir,
-                    'lang' => $lang,
-                ]
-            ) . "\n$text\n</div>";
-        $catpage->getContext()->getOutput()->addSubtitle( $content );
+        $catpage->getContext()->getOutput()->addSubtitle( Html::warningBox( $text ) );
     }
 
     public function onRandomPageQuery( &$tables, &$conds, &$joinConds ) {

@@ -57,17 +57,5 @@
 
 		"LoadExtensionSchemaUpdates": [ "timeMachineDbUpdates" ]
 	},
-	"ResourceModules": {
-		"ext.timeMachine": {
-			"localBasePath": ".",
-			"remoteExtPath": "TimeMachine",
-			"packageFiles": [
-				"form.js"
-			],
-			"dependencies": [
-				"oojs-ui-core"
-			]
-		}
-	},
 	"manifest_version": 2
 }

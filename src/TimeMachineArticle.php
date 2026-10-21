@@ -5,6 +5,7 @@ namespace MediaWiki\Extension\TimeMachine;
 use Article;
 use ParserOptions;
 use Title;
+use Html;
 use Xml;
 
 class TimeMachineArticle extends Article {
@@ -39,8 +40,6 @@ class TimeMachineArticle extends Article {
     public function setOldSubtitle( $oldid = 0 ) {
         global $wgTimeMachineServedByMove, $wgTimeMachineOriginalTitle;
 
-        $dir = $this->getContext()->getLanguage()->getDir();
-        $lang = $this->getContext()->getLanguage()->getHtmlCode();
         $messageKey = 'timemachine-article-info';
         if (Utils::isTimeTravelingTemporarily($this->getContext()->getRequest())) {
             $messageKey = 'timemachine-article-info-temporary';
@@ -53,15 +52,7 @@ class TimeMachineArticle extends Article {
         $link = $linkTitle->getFullURL( 'timemachine-date=' . $this->timeTravelDate );
 
         $text = wfMessage( $messageKey, $this->timeTravelDate, $link )->parse();
-        $content = Xml::openElement(
-                'div',
-                [
-                    'class' => "noarticletext mw-content-$dir warningbox",
-                    'dir' => $dir,
-                    'lang' => $lang,
-                ]
-            ) . "\n$text\n</div>";
-        $this->getContext()->getOutput()->addSubtitle( $content );
+        $this->getContext()->getOutput()->addSubtitle( Html::warningBox( $text ) );
     }
 
     public function getParserOptions(): ParserOptions {
