@@ -3,9 +3,11 @@
 namespace MediaWiki\Extension\TimeMachine;
 
 use Html;
+use HTMLForm;
 use OOUI\ActionFieldLayout;
 use OOUI\ButtonInputWidget;
 use OOUI\DropdownInputWidget;
+use MediaWiki\Widget\DateInputWidget;
 use OOUI\FormLayout;
 use Parser;
 use SpecialPage;
@@ -46,50 +48,37 @@ class SpecialTimeMachine extends SpecialPage {
             }
 
             if ( $currentlyTimeTraveling ) {
-                $output->addHTML(
-                    '<p class="successbox">' . wfMessage( 'timemachine-success-traveling' )->escaped() . '</p>'
-                );
+                $output->addHTML( Html::successBox( $this->msg( 'timemachine-success-traveling' )->escaped() ) );
             } else {
-                $output->addHTML(
-                    '<p class="successbox">' . wfMessage( 'timemachine-success-reset' )->escaped() . '</p>'
-                );
+                $output->addHTML( Html::successBox( $this->msg( 'timemachine-success-reset' )->escaped() ) );
             }
         }
 
         if ( $currentlyTimeTraveling && !$request->wasPosted() ) {
-            $output->addHTML(
-                '<p class="warningbox">' . wfMessage( 'timemachine-info-traveling' )->escaped() . '</p>'
-            );
+            $output->addHTML( Html::warningBox( $this->msg( 'timemachine-info-traveling' )->escaped() ) );
         }
 
         $hasPresets = $this->renderPresets( $date );
 
-        $output->addHTML(
-            '
-			<p>' .
-            wfMessage( $hasPresets ? 'timemachine-p1-presets' : 'timemachine-p1' )->escaped() .
-            '</p>
-			<form method="post">
-			<input type="date" name="date" value="' .
-            $date .
-            '" />
-			<button type="submit" class="mw-ui-button mw-ui-progressive">' .
-            wfMessage( 'timemachine-button1' )->escaped() .
-            '</button>
-			</form>
-			<p>' .
-            wfMessage( 'timemachine-p2' )->escaped() .
-            '</p>'
-        );
+        $output->addElement( 'p', [], $this->msg( $hasPresets ? 'timemachine-p1-presets' : 'timemachine-p1' )->escaped() );
+        $this->renderDateForm( $date );
+        $output->addElement( 'p', [], $this->msg( 'timemachine-p2' )->escaped() );
 
         if ( $currentlyTimeTraveling ) {
-            $output->addHTML(
-                '<p>' . wfMessage( 'timemachine-p3' )->escaped() . '</p>
-				<form method="post">
-				<input type="hidden" name="date" value="" />
-				<button type="submit" class="mw-ui-button">' . wfMessage( 'timemachine-button2' )->escaped() . '</button>
-				</form>'
-            );
+            $disableFormDescriptor = [
+                'info' => [
+                    'type' => 'info',
+                    'default' => $this->msg( 'timemachine-p3' )->escaped(),
+                ]
+            ];
+            $disableForm = HTMLForm::factory( 'ooui', $disableFormDescriptor, $this->getContext() );
+            $disableForm
+                ->addHiddenField( 'date', '' )
+                ->setMethod( 'post' )
+                ->setSubmitDestructive()
+                ->setSubmitTextMsg( 'timemachine-button2' )
+                ->prepareForm()
+                ->displayForm( false );
         }
 
         $this->setHeaders();
@@ -102,13 +91,9 @@ class SpecialTimeMachine extends SpecialPage {
         ] = $this->loadPresets();
 
         $output = $this->getOutput();
-        $output->enableOOUI();
-
         if ( $presetsErrored ) {
             $output->addHTML(
-                Html::rawElement(
-                    'p',
-                    [ 'class' => 'errorbox' ],
+                Html::errorBox(
                     Parser::stripOuterParagraph(
                         $output->parseAsContent(
                             'The [[WikiMedia:TimeMachinePresets|presets page]] is invalid and could not be fully parsed.'
@@ -122,44 +107,28 @@ class SpecialTimeMachine extends SpecialPage {
             return false;
         }
 
-        $output->addElement( 'p', [], wfMessage( 'timemachine-presets-p1' )->escaped() );
-        $dropdown = new DropdownInputWidget(
-            [
-                'infusable' => true,
-                'id' => 'preset-dropdown',
+        $formDescriptor = [
+            'info' => [
+                'type' => 'info',
+                'default' => $this->msg( 'timemachine-presets-p1' )->escaped(),
+            ],
+            'date' => [
+                'id' => 'date-select',
                 'name' => 'date',
+                'type' => 'select',
                 'options' => [
-                    [
-                        'label' => '',
-                        'data' => '',
-                        'disabled' => true,
-                    ],
+                    '' => '',
                     ...$presets
                 ],
-                'value' => $currentDate
+                'default' => $currentDate
             ]
-        );
-        $button = new ButtonInputWidget(
-            [
-                'type' => 'submit',
-                'label' => wfMessage( 'timemachine-button1' )->escaped(),
-                'flags' => [
-                    'primary',
-                    'progressive'
-                ]
-            ]
-        );
-        $layout = new ActionFieldLayout( $dropdown, $button );
-        $output->addInlineStyle( '.oo-ui-fieldLayout-align-left { max-width: 50em; }' );
-        $output->addHTML(
-            new FormLayout(
-                [
-                    'method' => 'POST',
-                    'items' => [ $layout ]
-                ]
-            )
-        );
-        $output->addModules( 'ext.timeMachine' );
+        ];
+        $form = HTMLForm::factory( 'ooui', $formDescriptor, $this->getContext() );
+        $form
+            ->setMethod( 'post' )
+            ->setSubmitTextMsg( 'timemachine-button1' )
+            ->prepareForm()
+            ->displayForm( false );
 
         return true;
     }
@@ -183,10 +152,7 @@ class SpecialTimeMachine extends SpecialPage {
 
                 $label = substr( $line, 0, $pipeIndex );
                 $value = substr( $line, $pipeIndex + 1 );
-                $result[] = [
-                    'label' => $label,
-                    'data' => $value
-                ];
+                $result[$label] = $value;
             }
         }
 
@@ -194,5 +160,22 @@ class SpecialTimeMachine extends SpecialPage {
             $result,
             $errored
         ];
+    }
+
+    private function renderDateForm( ?string $currentDate ) {
+        $formDescriptor = [
+            'date' => [
+                'id' => 'date-input',
+                'name' => 'date',
+                'type' => 'date',
+                'default' => $currentDate
+            ]
+        ];
+        $form = HTMLForm::factory( 'ooui', $formDescriptor, $this->getContext() );
+        $form
+            ->setMethod( 'post' )
+            ->setSubmitTextMsg( 'timemachine-button1' )
+            ->prepareForm()
+            ->displayForm( false );
     }
 }
