@@ -7,7 +7,7 @@
 	"descriptionmsg": "timemachine-desc",
 	"type": "specialpage",
 	"requires": {
-		"MediaWiki": ">= 1.35.0"
+		"MediaWiki": ">= 1.46.0"
 	},
 	"SpecialPages": {
 		"TimeMachine": "MediaWiki\\Extension\\TimeMachine\\SpecialTimeMachine"
@@ -39,7 +39,6 @@
 		"SidebarBeforeOutput": [ "timeMachine" ],
 
 		"ParserOptionsRegister": [ "timeMachine" ],
-		"BeforeParserFetchTemplateAndtitle": [ "timeMachine" ],
 
 		"PageMoveComplete": [ "timeMachine" ],
 

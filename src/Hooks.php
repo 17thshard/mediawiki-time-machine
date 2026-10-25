@@ -5,7 +5,6 @@ namespace MediaWiki\Extension\TimeMachine;
 use MediaWiki\Api\Hook\ApiOpenSearchSuggestHook;
 use MediaWiki\Hook\AncientPagesQueryHook;
 use MediaWiki\Hook\BeforeInitializeHook;
-use MediaWiki\Hook\BeforeParserFetchTemplateAndtitleHook;
 use MediaWiki\Hook\InitializeArticleMaybeRedirectHook;
 use MediaWiki\Hook\LonelyPagesQueryHook;
 use MediaWiki\Hook\PageMoveCompleteHook;
@@ -14,303 +13,286 @@ use MediaWiki\Hook\RandomPageQueryHook;
 use MediaWiki\Hook\SidebarBeforeOutputHook;
 use MediaWiki\Hook\SpecialSearchResultsHook;
 use MediaWiki\Hook\SpecialSearchResultsPrependHook;
+use MediaWiki\Html\Html;
+use MediaWiki\Logger\LoggerFactory;
+use MediaWiki\MediaWikiServices;
 use MediaWiki\Page\Hook\ArticleFromTitleHook;
 use MediaWiki\Page\Hook\CategoryPageViewHook;
 use MediaWiki\Permissions\Hook\GetUserPermissionsErrorsHook;
 use MediaWiki\Search\Hook\ShowSearchHitHook;
 use MediaWiki\Search\Hook\ShowSearchHitTitleHook;
+use MediaWiki\Title\Title;
 use RequestContext;
-use Title;
-use Html;
-use Xml;
 
-class Hooks implements ParserOptionsRegisterHook, ArticleFromTitleHook, BeforeParserFetchTemplateAndtitleHook,
-                       BeforeInitializeHook, InitializeArticleMaybeRedirectHook, PageMoveCompleteHook,
-                       SpecialSearchResultsPrependHook, SpecialSearchResultsHook, GetUserPermissionsErrorsHook,
-                       RandomPageQueryHook, AncientPagesQueryHook, LonelyPagesQueryHook, CategoryPageViewHook,
-                       ShowSearchHitHook, ShowSearchHitTitleHook, ApiOpenSearchSuggestHook, SidebarBeforeOutputHook {
-    public function onBeforeInitialize( $title, $unused, $output, $user, $request, $mediaWiki ) {
-        global $wgTimeMachineServedByMove, $wgTimeMachineOriginalTitle;
-        $timeTravelTarget = Utils::getTimeTravelTarget( $request );
-        if ( !$timeTravelTarget ) {
-            return;
-        }
+class Hooks implements ParserOptionsRegisterHook, ArticleFromTitleHook, BeforeInitializeHook,
+	InitializeArticleMaybeRedirectHook, PageMoveCompleteHook, SpecialSearchResultsPrependHook, SpecialSearchResultsHook,
+	GetUserPermissionsErrorsHook, RandomPageQueryHook, AncientPagesQueryHook, LonelyPagesQueryHook,
+	CategoryPageViewHook, ShowSearchHitHook, ShowSearchHitTitleHook, ApiOpenSearchSuggestHook, SidebarBeforeOutputHook {
+	public function onBeforeInitialize( $title, $unused, $output, $user, $request, $mediaWiki ) {
+		global $wgTimeMachineServedByMove, $wgTimeMachineOriginalTitle;
+		$timeTravelTarget = Utils::getTimeTravelTarget( $request );
+		if ( !$timeTravelTarget ) {
+			return;
+		}
 
-        if ( $request->getBool( 'oldid' ) ) {
-            return;
-        }
+		if ( $request->getBool( 'oldid' ) ) {
+			return;
+		}
 
-        // If a moved page existed under this name at our time travel destination, use that as the "canonical" page instead
-        $moveSource = Utils::findMoveSourceAfter( $title, $timeTravelTarget );
-        if ( !$moveSource ) {
-            return;
-        }
+		// If a moved page existed under this name at our time travel destination, use that as the "canonical" page instead
+		$moveSource = Utils::findMoveSourceAfter( $title, $timeTravelTarget );
+		if ( !$moveSource ) {
+			return;
+		}
 
-        $newTitle = Title::newFromID( $moveSource );
-        if ( !$newTitle ) {
-            return;
-        }
-        $newTitle->prefixedText = $title->getPrefixedText();
-        RequestContext::getMain()->setTitle( $newTitle );
-        $wgTimeMachineServedByMove = true;
-        $wgTimeMachineOriginalTitle = $title;
-    }
+		$newTitle = Title::newFromID( $moveSource );
+		if ( !$newTitle ) {
+			return;
+		}
+		LoggerFactory::getInstance('TimeMachineBlub')->info('blarghefarg');
+		$newTitle->prefixedText = $title->getPrefixedText();
+		RequestContext::getMain()->setTitle( $newTitle );
+		$wgTimeMachineServedByMove = true;
+		$wgTimeMachineOriginalTitle = $title;
+	}
 
-    public function onGetUserPermissionsErrors( $title, $user, $action, &$result ) {
-        $timeTravelTarget = Utils::getTimeTravelTarget( RequestContext::getMain()->getRequest() );
-        if ( !$timeTravelTarget ) {
-            return true;
-        }
+	public function onGetUserPermissionsErrors( $title, $user, $action, &$result ) {
+		$timeTravelTarget = Utils::getTimeTravelTarget( RequestContext::getMain()->getRequest() );
+		if ( !$timeTravelTarget ) {
+			return true;
+		}
 
-        if ( $action !== 'edit' ) {
-            return true;
-        }
+		if ( $action !== 'edit' ) {
+			return true;
+		}
 
-        $result = 'timemachine-no-editing';
+		$result = 'timemachine-no-editing';
 
-        return false;
-    }
+		return false;
+	}
 
-    public function onInitializeArticleMaybeRedirect( $title, $request, &$ignoreRedirect, &$target, &$article ) {
-        // If we couldn't time-travel the redirect to a previous revision, it didn't exist yet, so ignore it
-        if ( $article instanceof TimeMachineArticle && !$article->getOldID() ) {
-            $ignoreRedirect = true;
-        }
-    }
+	public function onInitializeArticleMaybeRedirect( $title, $request, &$ignoreRedirect, &$target, &$article ) {
+		// If we couldn't time-travel the redirect to a previous revision, it didn't exist yet, so ignore it
+		if ( $article instanceof TimeMachineArticle && !$article->getOldID() ) {
+			$ignoreRedirect = true;
+		}
+	}
 
-    public function onArticleFromTitle( $title, &$article, $context ) {
-        global $wgTimeMachineServedByMove;
-        if ( $article ) {
-            return;
-        }
+	public function onArticleFromTitle( $title, &$article, $context ) {
+		global $wgTimeMachineServedByMove;
+		if ( $article ) {
+			return;
+		}
 
-        switch ( $title->getNamespace() ) {
-            case NS_FILE:
-            case NS_CATEGORY:
-                return;
-        }
+		switch ( $title->getNamespace() ) {
+			case NS_FILE:
+			case NS_CATEGORY:
+				return;
+		}
 
-        $timeTravelTarget = Utils::getTimeTravelTarget( $context->getRequest() );
-        if ( !$timeTravelTarget ) {
-            return;
-        }
+		$timeTravelTarget = Utils::getTimeTravelTarget( $context->getRequest() );
+		if ( !$timeTravelTarget ) {
+			return;
+		}
 
-        // Replace the article with the closest revision to the timestamp we're traveling to
-        $timeTraveledRev = Utils::timeTravelRevision( $title, $timeTravelTarget );
+		// Replace the article with the closest revision to the timestamp we're traveling to
+		$timeTraveledRev = Utils::timeTravelRevision( $title, $timeTravelTarget );
 
-        $oldId = $context->getRequest()->getIntOrNull( 'oldid' );
-        if ( $oldId !== null ) {
-            $timeTraveledRev = $oldId;
-        }
+		$oldId = $context->getRequest()->getIntOrNull( 'oldid' );
+		if ( $oldId !== null ) {
+			$timeTraveledRev = $oldId;
+		}
 
-        // If the page was moved to its current name only after our destination timestamp, report the article as missing
-        $wasMovedHere = !$wgTimeMachineServedByMove && Utils::wasMovedHereAfter( $title, $timeTravelTarget );
-        if ( $wasMovedHere ) {
-            $timeTraveledRev = null;
-        }
+		// If the page was moved to its current name only after our destination timestamp, report the article as missing
+		$wasMovedHere = !$wgTimeMachineServedByMove && Utils::wasMovedHereAfter( $title, $timeTravelTarget );
+		if ( $wasMovedHere ) {
+			LoggerFactory::getInstance('TimeMachine')->info('Page was moved: ' . $title->getDBkey());
+			$timeTraveledRev = null;
+		}
 
-        $article = new TimeMachineArticle( $title, date( 'Y-m-d', $timeTravelTarget ), $timeTraveledRev );
-    }
+		$article = new TimeMachineArticle( $title, date( 'Y-m-d', $timeTravelTarget ), $timeTraveledRev ?? 0 );
+	}
 
-    public function onSidebarBeforeOutput( $skin, &$sidebar ): void {
-        global $wgTimeMachineServedByMove, $wgTimeMachineOriginalTitle;
-        $timeTravelTarget = Utils::getTimeTravelTarget( $skin->getRequest() );
-        if ( !$timeTravelTarget ) {
-            return;
-        }
+	public function onSidebarBeforeOutput( $skin, &$sidebar ): void {
+		global $wgTimeMachineServedByMove, $wgTimeMachineOriginalTitle;
+		$timeTravelTarget = Utils::getTimeTravelTarget( $skin->getRequest() );
+		if ( !$timeTravelTarget ) {
+			return;
+		}
 
-        $toolbox = $sidebar['TOOLBOX'];
-        if ( !$toolbox ) {
-            return;
-        }
-        $permalinkIndex = array_search( 'permalink', array_keys( $toolbox ) );
-        if ( $permalinkIndex === false ) {
-            return;
-        }
+		$toolbox = $sidebar['TOOLBOX'];
+		if ( !$toolbox ) {
+			return;
+		}
+		$permalinkIndex = array_search( 'permalink', array_keys( $toolbox ) );
+		if ( $permalinkIndex === false ) {
+			return;
+		}
 
-        $timeTravelTitle = $skin->getTitle();
-        if ( $wgTimeMachineServedByMove ) {
-            $timeTravelTitle = $wgTimeMachineOriginalTitle;
-        }
-        $sidebar['TOOLBOX'] = array_slice( $toolbox, 0, $permalinkIndex + 1, true ) + [
-                'timetravellink' => [
-                    'text' => $skin->msg( 'timemachine-link' )->text(),
-                    'href' => $timeTravelTitle->getLocalURL( 'timemachine-date=' . date( 'Y-m-d', $timeTravelTarget ) )
-                ]
-            ] + array_slice( $toolbox, $permalinkIndex + 1, null, true );
-    }
+		$timeTravelTitle = $skin->getTitle();
+		if ( $wgTimeMachineServedByMove ) {
+			$timeTravelTitle = $wgTimeMachineOriginalTitle;
+		}
+		$sidebar['TOOLBOX'] = array_slice( $toolbox, 0, $permalinkIndex + 1, true ) + [
+				'timetravellink' => [
+					'text' => $skin->msg( 'timemachine-link' )->text(),
+					'href' => $timeTravelTitle->getLocalURL( 'timemachine-date=' . date( 'Y-m-d', $timeTravelTarget ) )
+				]
+			] + array_slice( $toolbox, $permalinkIndex + 1, null, true );
+	}
 
-    public function onParserOptionsRegister( &$defaults, &$inCacheKey, &$lazyLoad ) {
-        $defaults[Utils::ARTICLE_PARSER_OPTION] = false;
-        $defaults[Utils::TIMESTAMP_PARSER_OPTION] = null;
-    }
+	public function onParserOptionsRegister( &$defaults, &$inCacheKey, &$lazyLoad ) {
+	}
 
-    public function onBeforeParserFetchTemplateAndtitle( $parser, $title, &$skip, &$id ) {
-        // If currently time-traveling, resolve templates to the same timestamp as we're traveling to
-        $timeMachine = $parser->getOptions()->getOption( Utils::ARTICLE_PARSER_OPTION );
-        if ( !$timeMachine ) {
-            return;
-        }
+	public function onPageMoveComplete( $old, $new, $user, $pageid, $redirid, $reason, $revision ) {
+		$dbProvider = MediaWikiServices::getInstance()->getConnectionProvider();
+		$dbw = $dbProvider->getPrimaryDatabase();
+		$dbw->newInsertQueryBuilder()->insertInto( 'timemachine_title_history' )->row(
+				[
+					'tm_page_id' => $pageid,
+					'tm_old_title' => $old->getDBkey(),
+					'tm_new_title' => $new->getDBkey(),
+					'tm_timestamp' => $revision->getTimestamp()
+				]
+			)->caller( __METHOD__ )->execute();
+	}
 
-        $timeMachineTimestamp = $parser->getOptions()->getOption( Utils::TIMESTAMP_PARSER_OPTION );
-        $pastRevId = Utils::timeTravelRevision( $title, $timeMachineTimestamp );
+	public function onSpecialSearchResults( $term, &$titleMatches, &$textMatches ) {
+		$timeTravelTarget = Utils::getTimeTravelTarget( RequestContext::getMain()->getRequest() );
+		if ( !$timeTravelTarget ) {
+			return;
+		}
 
-        if ( !$pastRevId ) {
-            return;
-        }
+		// Filter out search results that definitely didn't exist yet at the time travel destination
 
-        $id = $pastRevId;
-    }
+		if ( $titleMatches ) {
+			$titleMatches = new TimeMachineSearchResultSet( $titleMatches, $timeTravelTarget );
+		}
 
-    public function onPageMoveComplete( $old, $new, $user, $pageid, $redirid, $reason, $revision ) {
-        $db = wfGetDB( DB_MASTER );
-        $db->insert(
-            'timemachine_title_history',
-            [
-                'tm_page_id' => $pageid,
-                'tm_old_title' => $old->getDBkey(),
-                'tm_new_title' => $new->getDBkey(),
-                'tm_timestamp' => $revision->getTimestamp()
-            ],
-            __METHOD__
-        );
-    }
+		if ( $textMatches ) {
+			$textMatches = new TimeMachineSearchResultSet( $textMatches, $timeTravelTarget );
+		}
+	}
 
-    public function onSpecialSearchResults( $term, &$titleMatches, &$textMatches ) {
-        $timeTravelTarget = Utils::getTimeTravelTarget( RequestContext::getMain()->getRequest() );
-        if ( !$timeTravelTarget ) {
-            return;
-        }
+	public function onApiOpenSearchSuggest( &$results ) {
+		$timeTravelTarget = Utils::getTimeTravelTarget( RequestContext::getMain()->getRequest() );
+		if ( !$timeTravelTarget ) {
+			return;
+		}
 
-        // Filter out search results that definitely didn't exist yet at the time travel destination
+		// Filter out search results that definitely didn't exist yet at the time travel destination
+		$results = array_filter(
+			$results,
+			function ( $result ) use ( $timeTravelTarget ) {
+			$title = $result['title'];
+			$existed = Utils::timeTravelRevision( $title, $timeTravelTarget ) !== null;
 
-        if ( $titleMatches ) {
-            $titleMatches = new TimeMachineSearchResultSet( $titleMatches, $timeTravelTarget );
-        }
+			return $existed && !Utils::wasMovedHereAfter( $title, $timeTravelTarget );
+		}
+		);
+	}
 
-        if ( $textMatches ) {
-            $textMatches = new TimeMachineSearchResultSet( $textMatches, $timeTravelTarget );
-        }
-    }
+	public function onSpecialSearchResultsPrepend( $searchPage, $output, $term ) {
+		$timeTravelTarget = Utils::getTimeTravelTarget( $searchPage->getRequest() );
+		if ( !$timeTravelTarget ) {
+			return;
+		}
 
-    public function onApiOpenSearchSuggest( &$results ) {
-        $timeTravelTarget = Utils::getTimeTravelTarget( RequestContext::getMain()->getRequest() );
-        if ( !$timeTravelTarget ) {
-            return;
-        }
+		$text = wfMessage( 'timemachine-search-info' )->parse();
+		$output->addSubtitle( Html::warningBox( $text ) );
+	}
 
-        // Filter out search results that definitely didn't exist yet at the time travel destination
-        $results = array_filter(
-            $results,
-            function ( $result ) use ( $timeTravelTarget ) {
-                $title = $result['title'];
-                $existed = Utils::timeTravelRevision( $title, $timeTravelTarget ) !== null;
+	public function onShowSearchHitTitle(
+		&$title,
+		&$titleSnippet,
+		$result,
+		$terms,
+		$searchPage,
+		&$query,
+		&$attributes
+	) {
+		$timeTravelTarget = Utils::getTimeTravelTarget( $searchPage->getRequest() );
+		if ( !$timeTravelTarget ) {
+			return;
+		}
 
-                return $existed && !Utils::wasMovedHereAfter( $title, $timeTravelTarget );
-            }
-        );
-    }
+		// Replace title if page had a different name at the time travel destination
+		$oldTitle = Utils::findTitleAt( $title, $timeTravelTarget );
+		if ( $oldTitle ) {
+			$title = $oldTitle;
+		}
+	}
 
-    public function onSpecialSearchResultsPrepend( $searchPage, $output, $term ) {
-        $timeTravelTarget = Utils::getTimeTravelTarget( $searchPage->getRequest() );
-        if ( !$timeTravelTarget ) {
-            return;
-        }
+	public function onShowSearchHit(
+		$searchPage,
+		$result,
+		$terms,
+		&$link,
+		&$redirect,
+		&$section,
+		&$extract,
+		&$score,
+		&$size,
+		&$date,
+		&$related,
+		&$html
+	) {
+		$timeTravelTarget = Utils::getTimeTravelTarget( $searchPage->getRequest() );
+		if ( !$timeTravelTarget ) {
+			return;
+		}
 
-        $text = wfMessage( 'timemachine-search-info' )->parse();
-        $output->addSubtitle( Html::warningBox( $text ) );
-    }
+		// Hide preview and redirect info since they might contain spoilers
+		$extract = '';
+		$redirect = '';
+	}
 
-    public function onShowSearchHitTitle(
-        &$title,
-        &$titleSnippet,
-        $result,
-        $terms,
-        $searchPage,
-        &$query,
-        &$attributes
-    ) {
-        $timeTravelTarget = Utils::getTimeTravelTarget( $searchPage->getRequest() );
-        if ( !$timeTravelTarget ) {
-            return;
-        }
+	public function onCategoryPageView( $catpage ) {
+		$timeTravelTarget = Utils::getTimeTravelTarget( $catpage->getContext()->getRequest() );
+		if ( !$timeTravelTarget ) {
+			return;
+		}
 
-        // Replace title if page had a different name at the time travel destination
-        $oldTitle = Utils::findTitleAt( $title, $timeTravelTarget );
-        if ( $oldTitle ) {
-            $title = $oldTitle;
-        }
-    }
+		// We can't easily filter what pages get displayed on a category page, but at least we can show a warning
 
-    public function onShowSearchHit(
-        $searchPage,
-        $result,
-        $terms,
-        &$link,
-        &$redirect,
-        &$section,
-        &$extract,
-        &$score,
-        &$size,
-        &$date,
-        &$related,
-        &$html
-    ) {
-        $timeTravelTarget = Utils::getTimeTravelTarget( $searchPage->getRequest() );
-        if ( !$timeTravelTarget ) {
-            return;
-        }
+		$text = wfMessage( 'timemachine-category-info' )->parse();
+		$catpage->getContext()->getOutput()->addSubtitle( Html::warningBox( $text ) );
+	}
 
-        // Hide preview and redirect info since they might contain spoilers
-        $extract = '';
-        $redirect = '';
-    }
+	public function onRandomPageQuery( &$tables, &$conds, &$joinConds ) {
+		$this->adjustPagesQuery( $tables, $conds, $joinConds );
+	}
 
-    public function onCategoryPageView( $catpage ) {
-        $timeTravelTarget = Utils::getTimeTravelTarget( $catpage->getContext()->getRequest() );
-        if ( !$timeTravelTarget ) {
-            return;
-        }
+	public function onAncientPagesQuery( &$tables, &$conds, &$joinConds ) {
+		$this->adjustPagesQuery( $tables, $conds, $joinConds );
+	}
 
-        // We can't easily filter what pages get displayed on a category page, but at least we can show a warning
+	public function onLonelyPagesQuery( &$tables, &$conds, &$joinConds ) {
+		$this->adjustPagesQuery( $tables, $conds, $joinConds );
+	}
 
-        $text = wfMessage( 'timemachine-category-info' )->parse();
-        $catpage->getContext()->getOutput()->addSubtitle( Html::warningBox( $text ) );
-    }
+	private function adjustPagesQuery( &$tables, &$conds, &$joinConds ) {
+		$timeTravelTarget = Utils::getTimeTravelTarget( RequestContext::getMain()->getRequest() );
+		if ( !$timeTravelTarget ) {
+			return;
+		}
 
-    public function onRandomPageQuery( &$tables, &$conds, &$joinConds ) {
-        $this->adjustPagesQuery( $tables, $conds, $joinConds );
-    }
+		$dbProvider = MediaWikiServices::getInstance()->getConnectionProvider();
+		$dbr = $dbProvider->getReplicaDatabase();
 
-    public function onAncientPagesQuery( &$tables, &$conds, &$joinConds ) {
-        $this->adjustPagesQuery( $tables, $conds, $joinConds );
-    }
+		$conds[] = 'rev_timestamp < ' . $dbr->timestamp( $timeTravelTarget );
 
-    public function onLonelyPagesQuery( &$tables, &$conds, &$joinConds ) {
-        $this->adjustPagesQuery( $tables, $conds, $joinConds );
-    }
+		if ( in_array( 'revision', $tables ) ) {
+			return;
+		}
 
-    private function adjustPagesQuery( &$tables, &$conds, &$joinConds ) {
-        $timeTravelTarget = Utils::getTimeTravelTarget( RequestContext::getMain()->getRequest() );
-        if ( !$timeTravelTarget ) {
-            return;
-        }
-
-        $dbr = wfGetDB( DB_REPLICA );
-
-        $conds[] = 'rev_timestamp < ' . $dbr->timestamp( $timeTravelTarget );
-
-        if ( in_array( 'revision', $tables ) ) {
-            return;
-        }
-
-        $tables[] = 'revision';
-        $joinConds['revision'] = [
-            'INNER JOIN',
-            [
-                'page_id = rev_page',
-                'rev_parent_id' => 0
-            ]
-        ];
-    }
+		$tables[] = 'revision';
+		$joinConds['revision'] = [
+			'INNER JOIN',
+			[
+				'page_id = rev_page',
+				'rev_parent_id' => 0
+			]
+		];
+	}
 }
